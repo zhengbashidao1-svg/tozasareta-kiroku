@@ -3,52 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 v31</title>
+  <title>閉ざされた記録 v32</title>
   <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    body{
+      margin:0;
+      background:#05070c;
+      color:#fff;
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
     }
-    .wrap {
-      max-width: 800px;
-      margin: 0 auto;
-      min-height: 100vh;
-      padding: 24px 20px 40px;
-      box-sizing: border-box;
+    .wrap{
+      max-width:820px;
+      margin:0 auto;
+      min-height:100vh;
+      padding:20px 16px 40px;
+      box-sizing:border-box;
+      background:linear-gradient(to bottom,#0d1220,#05070c);
     }
-    .story {
-      white-space: pre-wrap;
-      line-height: 1.9;
-      font-size: 24px;
-      margin-bottom: 24px;
+    .stage{
+      color:#9fd0ff;
+      font-size:15px;
+      margin-bottom:12px;
     }
-    .status {
-      white-space: pre-wrap;
-      line-height: 1.8;
-      font-size: 16px;
-      margin-bottom: 24px;
-      color: #cfcfcf;
+    .panel{
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:18px;
+      padding:20px;
+      margin-bottom:16px;
     }
-    button {
-      display: block;
-      width: 100%;
-      padding: 18px;
-      margin-bottom: 14px;
-      font-size: 22px;
-      border: none;
-      border-radius: 16px;
-      background: #3a3554;
-      color: #fff;
+    .bg{
+      min-height:180px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:#ddd;
+      background:
+        radial-gradient(circle at top, rgba(70,90,170,0.22), transparent 55%),
+        linear-gradient(to bottom,#151a28,#090b10);
+    }
+    .speaker{
+      color:#9fe0d5;
+      font-size:13px;
+      margin:8px 0;
+      letter-spacing:0.05em;
+    }
+    .story{
+      white-space:pre-wrap;
+      line-height:1.9;
+      font-size:22px;
+      min-height:220px;
+    }
+    .status{
+      white-space:pre-wrap;
+      line-height:1.8;
+      font-size:15px;
+      color:#d5d5d5;
+    }
+    .choices{
+      display:grid;
+      gap:12px;
+    }
+    button{
+      width:100%;
+      padding:18px;
+      border:none;
+      border-radius:16px;
+      background:#3a3554;
+      color:#fff;
+      font-size:22px;
+      cursor:pointer;
+    }
+    .sub{
+      background:#2b3a63;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div id="story" class="story">読み込み中...</div>
-    <div id="status" class="status"></div>
-    <div id="choices"></div>
+    <div id="stage" class="stage">ホテル編 / 第1部屋</div>
+
+    <div id="bg" class="panel bg">背景イメージ：暗闇の部屋</div>
+
+    <div id="speaker" class="speaker">SYSTEM</div>
+
+    <div id="story" class="panel story"></div>
+
+    <div id="status" class="panel status"></div>
+
+    <div id="choices" class="choices"></div>
+
+    <div class="choices" style="margin-top:12px;">
+      <button class="sub" onclick="showStart()">最初から</button>
+    </div>
   </div>
 
   <script>
@@ -61,7 +108,10 @@
         "動物：" + (animal || "未決定");
     }
 
-    function render(text, choices) {
+    function render(stage, bg, speaker, text, choices) {
+      document.getElementById("stage").innerText = stage;
+      document.getElementById("bg").innerText = bg;
+      document.getElementById("speaker").innerText = speaker;
       document.getElementById("story").innerText = text;
       updateStatus();
 
@@ -77,7 +127,12 @@
     }
 
     function showStart() {
+      gender = "";
+      animal = "";
       render(
+        "ホテル編 / 第1部屋",
+        "背景イメージ：暗闇の部屋",
+        "SYSTEM",
 `暗闇の部屋。
 
 犬か猫の鳴き声がする。`,
@@ -103,14 +158,25 @@
     }
 
     function showDoorRoom() {
+      const line = gender === "女主人公"
+        ? "扉が3つ……？ なんか全部、嫌な感じがする……。"
+        : "……扉が3つ……。どれも普通じゃない。";
+
+      const animalLine = animal === "猫"
+        ? "猫は3つの扉の前を静かに歩き、一瞬だけ左を見た。"
+        : "犬は左の扉の前で止まり、低く唸っている。";
+
       render(
+        "ホテル編 / 第2部屋",
+        "背景イメージ：3つの扉のある広間",
+        "SYSTEM",
 `${gender}
 
-扉が3つある。
-
-どれも普通じゃない。
+${line}
 
 左の扉からは冷たい空気が流れ込んでくる。
+
+${animalLine}
 
 ここで進む場所を決めなければならない。`,
         [
@@ -121,22 +187,23 @@
           {
             text: animal + "に任せる",
             onClick: showHotelLobby
-          },
-          {
-            text: "最初から",
-            onClick: showStart
           }
         ]
       );
     }
 
     function showHotelLobby() {
+      const line = gender === "女主人公"
+        ? "ここ……ホテル……？ 静かすぎる……。"
+        : "……ホテル……？ 誰もいない。";
+
       render(
+        "ホテル編 / 第3部屋",
+        "背景イメージ：ホテルのロビー",
+        "SYSTEM",
 `${gender}
 
-……ホテル……？
-
-誰もいない。
+${line}
 
 フロントには誰もいない。
 時計は止まり、シャンデリアだけが揺れている。
