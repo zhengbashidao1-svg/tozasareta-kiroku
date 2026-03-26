@@ -120,13 +120,6 @@
       background: #3b2d56;
     }
 
-    .ending {
-      font-size: 22px;
-      font-weight: 700;
-      color: #ffd166;
-      margin-bottom: 10px;
-    }
-
     .small {
       font-size: 13px;
       color: #bdbdbd;
@@ -187,18 +180,12 @@
     const statusBox = document.getElementById("statusBox");
     const restartBtn = document.getElementById("restartBtn");
 
-    function male(line) {
-      return "男主人公\n" + line;
-    }
-
-    function female(line) {
-      return "女主人公\n" + line;
+    function protagonistLabel() {
+      return state.protagonistGender === "female" ? "女主人公" : "男主人公";
     }
 
     function protagonistLine(maleText, femaleText) {
-      if (state.protagonistGender === "male") return male(maleText);
-      if (state.protagonistGender === "female") return female(femaleText);
-      return male(maleText);
+      return `${protagonistLabel()}\n\n${state.protagonistGender === "female" ? femaleText : maleText}`;
     }
 
     function updateStatus() {
@@ -251,6 +238,7 @@
       state.dangerFlags = 0;
       state.petAlive = true;
       state.petBetrayed = false;
+      state.route = "hotel";
       renderScene(scene1);
     }
 
@@ -266,14 +254,14 @@
           text:
 `【無事に帰還】
 
-主人公は幽霊を倒した。
+${protagonistLabel()}は幽霊を倒した。
 
 その瞬間、失われていた記憶が一気に戻る。
 自分はペットを探してこのホテルに入り、過去の事件と再び向き合っていたのだと知る。
 
 ${state.animal === "dog" ? "犬" : "猫"}は最後までそばにいた。
 
-主人公はゆっくりとホテルの外へ出る。
+${protagonistLabel()}はゆっくりとホテルの外へ出る。
 冷たい夜気の中で、ようやく本当の現実に帰ってきた。`,
           choices: [
             { text: "最初からやり直す", next: scene1 }
@@ -290,7 +278,7 @@ ${state.animal === "dog" ? "犬" : "猫"}は最後までそばにいた。
           text:
 `【何かを犠牲にしてなんとか助かる】
 
-主人公はホテルから脱出した。
+${protagonistLabel()}はホテルから脱出した。
 
 だが、${state.animal === "dog" ? "犬" : "猫"}はもう戻ってこない。
 逃げることはできたのに、何かがずっと背後に残っている。
@@ -313,10 +301,10 @@ ${state.animal === "dog" ? "犬" : "猫"}は最後までそばにいた。
         text:
 `【襲われて終了】
 
-主人公は脱出できなかった。
+${protagonistLabel()}は脱出できなかった。
 
 ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
-その瞬間、主人公はすべてを思い出す。
+その瞬間、${protagonistLabel()}はすべてを思い出す。
 
 この幽霊は、過去に自分を殺した相手だった。
 そして死んだ後もなお、自分を追い続けていたのだ。
