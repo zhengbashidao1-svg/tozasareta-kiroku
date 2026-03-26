@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 - ホテル編</title>
+  <title>閉ざされた記録 - ホテル編 v3</title>
   <style>
     body {
       margin: 0;
@@ -401,7 +401,10 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
 
 左の扉からは冷たい空気が流れ込んでくる。
 
-${state.animal === "dog" ? "犬は左の扉の前で止まり、低く唸っている。" : "猫は3つの扉の前を静かに歩き、一瞬だけ左を見た。"}
+${state.animal === "dog"
+  ? "犬は左の扉の前で止まり、低く唸っている。"
+  : "猫は3つの扉の前を静かに歩き、一瞬だけ左を見た。"
+}
 
 ここで進む場所を決めなければならない。`,
       choices: [
