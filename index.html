@@ -1,26 +1,157 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>テスト</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>閉ざされた記録 v31</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    }
+    .wrap {
+      max-width: 800px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 24px 20px 40px;
+      box-sizing: border-box;
+    }
+    .story {
+      white-space: pre-wrap;
+      line-height: 1.9;
+      font-size: 24px;
+      margin-bottom: 24px;
+    }
+    .status {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      font-size: 16px;
+      margin-bottom: 24px;
+      color: #cfcfcf;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      margin-bottom: 14px;
+      font-size: 22px;
+      border: none;
+      border-radius: 16px;
+      background: #3a3554;
+      color: #fff;
+    }
+  </style>
 </head>
+<body>
+  <div class="wrap">
+    <div id="story" class="story">読み込み中...</div>
+    <div id="status" class="status"></div>
+    <div id="choices"></div>
+  </div>
 
-<body style="background:black;color:white;">
+  <script>
+    let gender = "";
+    let animal = "";
 
-<h1 id="text">読み込み中</h1>
+    function updateStatus() {
+      document.getElementById("status").innerText =
+        "主人公：" + (gender || "未決定") + "\n" +
+        "動物：" + (animal || "未決定");
+    }
 
-<button onclick="dog()">犬</button>
-<button onclick="cat()">猫</button>
+    function render(text, choices) {
+      document.getElementById("story").innerText = text;
+      updateStatus();
 
-<script>
-function dog(){
- document.getElementById("text").innerText = "男主人公";
-}
+      const box = document.getElementById("choices");
+      box.innerHTML = "";
 
-function cat(){
- document.getElementById("text").innerText = "女主人公";
-}
-</script>
+      choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.innerText = choice.text;
+        btn.onclick = choice.onClick;
+        box.appendChild(btn);
+      });
+    }
 
+    function showStart() {
+      render(
+`暗闇の部屋。
+
+犬か猫の鳴き声がする。`,
+        [
+          {
+            text: "犬を選ぶ",
+            onClick: () => {
+              gender = "男主人公";
+              animal = "犬";
+              showDoorRoom();
+            }
+          },
+          {
+            text: "猫を選ぶ",
+            onClick: () => {
+              gender = "女主人公";
+              animal = "猫";
+              showDoorRoom();
+            }
+          }
+        ]
+      );
+    }
+
+    function showDoorRoom() {
+      render(
+`${gender}
+
+扉が3つある。
+
+どれも普通じゃない。
+
+左の扉からは冷たい空気が流れ込んでくる。
+
+ここで進む場所を決めなければならない。`,
+        [
+          {
+            text: "左の扉に入る（ホテル）",
+            onClick: showHotelLobby
+          },
+          {
+            text: animal + "に任せる",
+            onClick: showHotelLobby
+          },
+          {
+            text: "最初から",
+            onClick: showStart
+          }
+        ]
+      );
+    }
+
+    function showHotelLobby() {
+      render(
+`${gender}
+
+……ホテル……？
+
+誰もいない。
+
+フロントには誰もいない。
+時計は止まり、シャンデリアだけが揺れている。
+
+床には新しい足跡がある。`,
+        [
+          {
+            text: "最初から",
+            onClick: showStart
+          }
+        ]
+      );
+    }
+
+    showStart();
+  </script>
 </body>
 </html>
