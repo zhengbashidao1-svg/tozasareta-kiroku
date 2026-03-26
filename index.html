@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 - ホテル編 v3</title>
+  <title>閉ざされた記録 - ホテル編 v4</title>
   <style>
     body {
       margin: 0;
@@ -11,7 +11,6 @@
       color: #f2f2f2;
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
     }
-
     .game-wrap {
       max-width: 900px;
       margin: 0 auto;
@@ -20,7 +19,6 @@
       flex-direction: column;
       background: linear-gradient(to bottom, #11131a, #07080c);
     }
-
     .top-bar {
       padding: 14px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -31,13 +29,11 @@
       font-size: 14px;
       color: #cfcfcf;
     }
-
     .stage {
       padding: 12px 16px;
       font-size: 13px;
       color: #9ad0ff;
     }
-
     .bg-panel {
       margin: 0 16px;
       height: 220px;
@@ -53,7 +49,6 @@
         radial-gradient(circle at top, rgba(70,80,120,0.25), transparent 50%),
         linear-gradient(to bottom, #1a1d29, #0d0f16);
     }
-
     .content {
       padding: 18px 16px 24px;
       display: flex;
@@ -61,13 +56,11 @@
       gap: 16px;
       flex: 1;
     }
-
     .speaker {
       font-size: 13px;
       color: #8dd3c7;
       letter-spacing: 0.04em;
     }
-
     .text-box {
       min-height: 180px;
       white-space: pre-wrap;
@@ -78,7 +71,6 @@
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.04);
     }
-
     .status-box {
       padding: 14px;
       border-radius: 16px;
@@ -88,12 +80,10 @@
       line-height: 1.7;
       color: #d7d7d7;
     }
-
     .choices {
       display: grid;
       gap: 10px;
     }
-
     button.choice-btn,
     button.control-btn {
       width: 100%;
@@ -105,21 +95,13 @@
       color: white;
       background: #26324f;
     }
-
-    button.choice-btn:hover,
-    button.control-btn:hover {
-      filter: brightness(1.08);
-    }
-
     .control-row {
       display: flex;
       gap: 10px;
     }
-
     .control-row .control-btn {
       background: #3b2d56;
     }
-
     .small {
       font-size: 13px;
       color: #bdbdbd;
@@ -129,7 +111,7 @@
 <body>
   <div class="game-wrap">
     <div class="top-bar">
-      <div id="titleText">閉ざされた記録 - ホテル編</div>
+      <div>閉ざされた記録 - ホテル編</div>
       <div id="progressText">開始前</div>
     </div>
 
@@ -141,11 +123,8 @@
 
     <div class="content">
       <div class="speaker" id="speakerName">SYSTEM</div>
-
       <div class="text-box" id="storyText"></div>
-
       <div class="status-box" id="statusBox"></div>
-
       <div class="choices" id="choices"></div>
 
       <div class="control-row">
@@ -168,7 +147,6 @@
       dangerFlags: 0,
       petAlive: true,
       petBetrayed: false,
-      route: "hotel"
     };
 
     const storyText = document.getElementById("storyText");
@@ -192,6 +170,10 @@
       return `${protagonistLabel()}\n\n${protagonistText(maleText, femaleText)}`;
     }
 
+    function resolve(value) {
+      return typeof value === "function" ? value() : value;
+    }
+
     function updateStatus() {
       statusBox.innerHTML =
         "主人公：" + (
@@ -208,11 +190,11 @@
     }
 
     function renderScene(scene) {
-      speakerName.textContent = scene.speaker || "SYSTEM";
-      storyText.textContent = scene.text;
-      stageText.textContent = scene.stage;
-      bgPanel.textContent = scene.bg;
-      progressText.textContent = scene.progress;
+      speakerName.textContent = resolve(scene.speaker) || "SYSTEM";
+      storyText.textContent = resolve(scene.text);
+      stageText.textContent = resolve(scene.stage);
+      bgPanel.textContent = resolve(scene.bg);
+      progressText.textContent = resolve(scene.progress);
       updateStatus();
 
       choices.innerHTML = "";
@@ -220,13 +202,13 @@
       scene.choices.forEach(choice => {
         const btn = document.createElement("button");
         btn.className = "choice-btn";
-        btn.textContent = choice.text;
+        btn.textContent = resolve(choice.text);
         btn.onclick = () => {
           if (choice.effect) choice.effect();
-          if (typeof choice.next === "function") {
+          if (typeof choice.next === "function" && !choice.sceneFactory) {
             choice.next();
           } else {
-            renderScene(choice.next);
+            renderScene(typeof choice.next === "function" ? choice.next() : choice.next);
           }
         };
         choices.appendChild(btn);
@@ -242,7 +224,6 @@
       state.dangerFlags = 0;
       state.petAlive = true;
       state.petBetrayed = false;
-      state.route = "hotel";
       renderScene(scene1);
     }
 
@@ -255,8 +236,7 @@
           stage: "ホテル編 / エンディング",
           bg: "背景イメージ：夜明け前のホテル出口",
           progress: "END 1 / 無事に帰還",
-          text:
-`【無事に帰還】
+          text: () => `【無事に帰還】
 
 ${protagonistLabel()}は幽霊を倒した。
 
@@ -267,9 +247,7 @@ ${state.animal === "dog" ? "犬" : "猫"}は最後までそばにいた。
 
 ${protagonistLabel()}はゆっくりとホテルの外へ出る。
 冷たい夜気の中で、ようやく本当の現実に帰ってきた。`,
-          choices: [
-            { text: "最初からやり直す", next: scene1 }
-          ]
+          choices: [{ text: "最初からやり直す", next: scene1 }]
         };
       }
 
@@ -279,8 +257,7 @@ ${protagonistLabel()}はゆっくりとホテルの外へ出る。
           stage: "ホテル編 / エンディング",
           bg: "背景イメージ：ホテル外の暗い駐車場",
           progress: "END 2 / 何かを犠牲にして助かる",
-          text:
-`【何かを犠牲にしてなんとか助かる】
+          text: () => `【何かを犠牲にしてなんとか助かる】
 
 ${protagonistLabel()}はホテルから脱出した。
 
@@ -291,9 +268,7 @@ ${protagonistLabel()}はホテルから脱出した。
 ただ夜になるたび、見えない恐怖に怯えながら暮らすことになる。
 
 本当に助かったのか、自分でも分からない。`,
-          choices: [
-            { text: "最初からやり直す", next: scene1 }
-          ]
+          choices: [{ text: "最初からやり直す", next: scene1 }]
         };
       }
 
@@ -302,8 +277,7 @@ ${protagonistLabel()}はホテルから脱出した。
         stage: "ホテル編 / エンディング",
         bg: "背景イメージ：闇の中のホテル最上階",
         progress: "END 3 / 襲われて終了",
-        text:
-`【襲われて終了】
+        text: () => `【襲われて終了】
 
 ${protagonistLabel()}は脱出できなかった。
 
@@ -315,9 +289,7 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
 
 思い出した時にはもう遅い。
 恐怖は終わらない。`,
-        choices: [
-          { text: "最初からやり直す", next: scene1 }
-        ]
+        choices: [{ text: "最初からやり直す", next: scene1 }]
       };
     }
 
@@ -326,8 +298,7 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
       stage: "ホテル編 / 第1部屋",
       bg: "背景イメージ：真っ暗な部屋",
       progress: "1 / 10",
-      text:
-`…………。
+      text: `…………。
 
 意識がゆっくりと戻る。
 
@@ -348,7 +319,7 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
             state.animal = "dog";
             state.trustAnimal += 1;
           },
-          next: () => renderScene(scene2)
+          next: scene2
         },
         {
           text: "猫の鳴き声の方へ行く",
@@ -357,7 +328,7 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
             state.animal = "cat";
             state.trustAnimal += 1;
           },
-          next: () => renderScene(scene2)
+          next: scene2
         },
         {
           text: "動かず様子を見る",
@@ -367,13 +338,12 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
             state.protagonistGender = "male";
             state.animal = "dog";
           },
-          next: () => renderScene({
+          next: {
             speaker: "SYSTEM",
             stage: "ホテル編 / 第1部屋",
             bg: "背景イメージ：真っ暗な部屋",
             progress: "1 / 10",
-            text:
-`鳴き声が止まる。
+            text: `鳴き声が止まる。
 
 静かすぎる。
 
@@ -383,7 +353,7 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
             choices: [
               { text: "先へ進む", next: scene2 }
             ]
-          })
+          }
         }
       ]
     };
@@ -393,8 +363,7 @@ ${state.animal === "dog" ? "犬" : "猫"}はどこかへ逃げていく。
       stage: "ホテル編 / 第2部屋",
       bg: "背景イメージ：3つの扉のある広間",
       progress: "2 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……扉が3つ……。どれも普通じゃない。",
 "扉が3つ……？ なんか全部、嫌な感じがする……。"
 )}
@@ -410,33 +379,28 @@ ${state.animal === "dog"
       choices: [
         {
           text: "左の扉に入る（ホテル）",
-          effect: () => {},
-          next: () => renderScene(scene3)
+          next: scene3
         },
         {
           text: "動物に任せる",
           effect: () => {
             state.trustAnimal += 2;
-            if (state.animal === "cat") {
-              state.petBetrayed = true;
-            }
+            if (state.animal === "cat") state.petBetrayed = true;
           },
-          next: () => renderScene({
+          next: () => ({
             speaker: "SYSTEM",
             stage: "ホテル編 / 第2部屋",
             bg: "背景イメージ：3つの扉のある広間",
             progress: "2 / 10",
-            text:
-`${state.animal === "dog"
-  ? "犬は左の扉へ向かう。迷いはない。だが、この確信が少しだけ怖い。"
-  : "猫はためらうように歩き、最後に左の扉の前で止まる。……本当に、信じていいのだろうか。"
-}
+            text: `${state.animal === "dog"
+              ? "犬は左の扉へ向かう。迷いはない。だが、この確信が少しだけ怖い。"
+              : "猫はためらうように歩き、最後に左の扉の前で止まる。……本当に、信じていいのだろうか。"
+            }
 
 あなたはその後を追う。`,
-            choices: [
-              { text: "先へ進む", next: scene3 }
-            ]
-          })
+            choices: [{ text: "先へ進む", next: scene3 }]
+          }),
+          sceneFactory: true
         }
       ]
     };
@@ -446,8 +410,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第3部屋",
       bg: "背景イメージ：ホテルのロビー",
       progress: "3 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……ホテル……？ 誰もいない。",
 "ここ……ホテル……？ 静かすぎる……。"
 )}
@@ -460,23 +423,20 @@ ${state.animal === "dog"
         {
           text: "フロントを調べる",
           effect: () => { state.truthFlags += 1; },
-          next: () => renderScene(scene4)
+          next: scene4
         },
         {
           text: "階段へ向かう",
           effect: () => { state.dangerFlags += 1; },
-          next: () => renderScene(scene4)
+          next: scene4
         },
         {
           text: "動物の行動を見る",
           effect: () => {
-            if (state.animal === "dog") {
-              state.trustAnimal += 1;
-            } else {
-              state.truthFlags += 1;
-            }
+            if (state.animal === "dog") state.trustAnimal += 1;
+            else state.truthFlags += 1;
           },
-          next: () => renderScene(scene4)
+          next: scene4
         }
       ]
     };
@@ -486,8 +446,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第4部屋",
       bg: "背景イメージ：長い廊下",
       progress: "4 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……誰かいるのか？",
 "今……足音、したよね……？"
 )}
@@ -498,13 +457,12 @@ ${state.animal === "dog"
       choices: [
         {
           text: "隠れる",
-          effect: () => {},
-          next: () => renderScene(scene5)
+          next: scene5
         },
         {
           text: "走って逃げる",
           effect: () => { state.dangerFlags += 1; },
-          next: () => renderScene(scene5)
+          next: scene5
         },
         {
           text: "振り返る",
@@ -512,22 +470,20 @@ ${state.animal === "dog"
             state.truthFlags += 1;
             state.dangerFlags += 1;
           },
-          next: () => renderScene({
+          next: () => ({
             speaker: "SYSTEM",
             stage: "ホテル編 / 第4部屋",
             bg: "背景イメージ：長い廊下",
             progress: "4 / 10",
-            text:
-`${protagonistBlock(
+            text: `${protagonistBlock(
 "……っ！ 今、いた……！",
 "……見えた……何かいた……。"
 )}
 
 振り返った瞬間だけ、白い輪郭が見えた。`,
-            choices: [
-              { text: "先へ進む", next: scene5 }
-            ]
-          })
+            choices: [{ text: "先へ進む", next: scene5 }]
+          }),
+          sceneFactory: true
         }
       ]
     };
@@ -537,8 +493,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第5部屋",
       bg: "背景イメージ：客室エリア",
       progress: "5 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "どの部屋だ……何か違和感がある。",
 "全部同じに見える……でも、どこか違う……。"
 )}
@@ -551,7 +506,7 @@ ${state.animal === "dog"
 }`,
       choices: [
         {
-          text: state.animal === "dog" ? "犬を信じる" : "猫を信じる",
+          text: () => state.animal === "dog" ? "犬を信じる" : "猫を信じる",
           effect: () => {
             state.trustAnimal += 2;
             if (state.animal === "cat") {
@@ -559,14 +514,12 @@ ${state.animal === "dog"
               state.dangerFlags += 1;
             }
           },
-          next: () => renderScene(scene6)
+          next: scene6
         },
         {
           text: "自分で選ぶ",
-          effect: () => {
-            state.suspicionAnimal += 1;
-          },
-          next: () => renderScene(scene6)
+          effect: () => { state.suspicionAnimal += 1; },
+          next: scene6
         },
         {
           text: "どちらも信用しない",
@@ -574,7 +527,7 @@ ${state.animal === "dog"
             state.suspicionAnimal += 2;
             state.dangerFlags += 1;
           },
-          next: () => renderScene(scene6)
+          next: scene6
         }
       ]
     };
@@ -584,8 +537,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第6部屋",
       bg: "背景イメージ：古いエレベーター",
       progress: "6 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……また同じ階……？",
 "嘘……戻ってる……。"
 )}
@@ -600,23 +552,19 @@ ${state.animal === "dog"
             state.truthFlags += 1;
             state.dangerFlags += 1;
           },
-          next: () => renderScene(scene7)
+          next: scene7
         },
         {
           text: "非常階段に切り替える",
-          effect: () => {},
-          next: () => renderScene(scene7)
+          next: scene7
         },
         {
           text: "動物の反応を見る",
           effect: () => {
-            if (state.animal === "cat") {
-              state.truthFlags += 1;
-            } else {
-              state.trustAnimal += 1;
-            }
+            if (state.animal === "cat") state.truthFlags += 1;
+            else state.trustAnimal += 1;
           },
-          next: () => renderScene(scene7)
+          next: scene7
         }
       ]
     };
@@ -626,8 +574,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第7部屋",
       bg: "背景イメージ：ホテルのレストラン",
       progress: "7 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……音を立てるな。",
 "やだ……勝手に動いてる……。"
 )}
@@ -638,8 +585,7 @@ ${state.animal === "dog"
       choices: [
         {
           text: "静かに進む",
-          effect: () => {},
-          next: () => renderScene(scene8)
+          next: scene8
         },
         {
           text: "物音の原因を調べる",
@@ -647,7 +593,7 @@ ${state.animal === "dog"
             state.truthFlags += 1;
             state.dangerFlags += 1;
           },
-          next: () => renderScene(scene8)
+          next: scene8
         },
         {
           text: "動物を先に行かせる",
@@ -655,22 +601,20 @@ ${state.animal === "dog"
             state.petAlive = false;
             state.dangerFlags += 1;
           },
-          next: () => renderScene({
+          next: () => ({
             speaker: "SYSTEM",
             stage: "ホテル編 / 第7部屋",
             bg: "背景イメージ：ホテルのレストラン",
             progress: "7 / 10",
-            text:
-`${state.animal === "dog" ? "犬" : "猫"}は奥へ走った。
+            text: `${state.animal === "dog" ? "犬" : "猫"}は奥へ走った。
 
 次の瞬間、悲鳴のような音が響く。
 
 あなたは助かった。
 だが、もう戻ってこない。`,
-            choices: [
-              { text: "先へ進む", next: scene8 }
-            ]
-          })
+            choices: [{ text: "先へ進む", next: scene8 }]
+          }),
+          sceneFactory: true
         }
       ]
     };
@@ -680,8 +624,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第8部屋",
       bg: "背景イメージ：鏡の部屋",
       progress: "8 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……鏡……？",
 "……なにこれ……。"
 )}
@@ -693,17 +636,16 @@ ${state.animal === "dog"
         {
           text: "鏡をじっと見る",
           effect: () => { state.truthFlags += 2; },
-          next: () => renderScene(scene9)
+          next: scene9
         },
         {
           text: "鏡に近づく",
           effect: () => { state.dangerFlags += 1; },
-          next: () => renderScene(scene9)
+          next: scene9
         },
         {
           text: "目を逸らす",
-          effect: () => {},
-          next: () => renderScene(scene9)
+          next: scene9
         },
         {
           text: "鏡を壊す",
@@ -711,7 +653,7 @@ ${state.animal === "dog"
             state.truthFlags += 1;
             state.dangerFlags += 2;
           },
-          next: () => renderScene(scene9)
+          next: scene9
         }
       ]
     };
@@ -721,8 +663,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第9部屋",
       bg: "背景イメージ：地下記録室",
       progress: "9 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……これ……俺の名前……？",
 "……これ……私……？"
 )}
@@ -734,17 +675,17 @@ ${state.animal === "dog"
         {
           text: "記録を読む",
           effect: () => { state.truthFlags += 2; },
-          next: () => renderScene(scene10)
+          next: scene10
         },
         {
           text: "写真だけ見る",
           effect: () => { state.truthFlags += 1; },
-          next: () => renderScene(scene10)
+          next: scene10
         },
         {
           text: "怖くなって戻る",
           effect: () => { state.dangerFlags += 1; },
-          next: () => renderScene(scene10)
+          next: scene10
         },
         {
           text: "動物に任せる",
@@ -756,7 +697,7 @@ ${state.animal === "dog"
               state.truthFlags += 1;
             }
           },
-          next: () => renderScene(scene10)
+          next: scene10
         }
       ]
     };
@@ -766,8 +707,7 @@ ${state.animal === "dog"
       stage: "ホテル編 / 第10部屋",
       bg: "背景イメージ：最上階の暗い部屋",
       progress: "10 / 10",
-      text:
-`${protagonistBlock(
+      text: () => `${protagonistBlock(
 "……お前か……！",
 "……ずっと……追ってきてたの……？"
 )}
@@ -778,7 +718,6 @@ ${state.animal === "dog"
       choices: [
         {
           text: "戦う",
-          effect: () => {},
           next: () => {
             if (state.truthFlags >= 5 && state.petAlive && !state.petBetrayed) {
               renderScene(endingScene("good"));
@@ -791,7 +730,6 @@ ${state.animal === "dog"
         },
         {
           text: "逃げる",
-          effect: () => {},
           next: () => {
             if (state.petAlive && state.truthFlags >= 3) {
               renderScene(endingScene("middle"));
@@ -802,17 +740,13 @@ ${state.animal === "dog"
         },
         {
           text: "受け入れる",
-          effect: () => {
-            state.dangerFlags += 2;
-          },
+          effect: () => { state.dangerFlags += 2; },
           next: () => renderScene(endingScene("bad"))
         },
         {
           text: "動物をかばう",
           effect: () => {
-            if (state.petAlive) {
-              state.truthFlags += 1;
-            }
+            if (state.petAlive) state.truthFlags += 1;
           },
           next: () => {
             if (state.truthFlags >= 5 && state.petAlive) {
@@ -824,9 +758,7 @@ ${state.animal === "dog"
         },
         {
           text: "動物を見捨てる",
-          effect: () => {
-            state.petAlive = false;
-          },
+          effect: () => { state.petAlive = false; },
           next: () => renderScene(endingScene("middle"))
         }
       ]
