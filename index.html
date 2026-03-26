@@ -1,81 +1,25 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 テスト</title>
-  <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    #story {
-      white-space: pre-wrap;
-      line-height: 1.8;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-    button {
-      display: block;
-      width: 100%;
-      padding: 16px;
-      margin-bottom: 12px;
-      font-size: 20px;
-      border: none;
-      border-radius: 12px;
-      background: #334;
-      color: #fff;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>テスト</title>
 </head>
-<body>
 
-<div id="story">読み込み中...</div>
-<div id="choices"></div>
+<body style="background:black;color:white;">
+
+<h1 id="text">読み込み中</h1>
+
+<button onclick="dog()">犬</button>
+<button onclick="cat()">猫</button>
 
 <script>
-  let gender = "";
+function dog(){
+ document.getElementById("text").innerText = "男主人公";
+}
 
-  function showStart() {
-    document.getElementById("story").innerText =
-      "暗闇の部屋。\n\n犬か猫の鳴き声がする。";
-
-    document.getElementById("choices").innerHTML =
-      '<button onclick="chooseDog()">犬を選ぶ</button>' +
-      '<button onclick="chooseCat()">猫を選ぶ</button>';
-  }
-
-  function chooseDog() {
-    gender = "男主人公";
-    showNext();
-  }
-
-  function chooseCat() {
-    gender = "女主人公";
-    showNext();
-  }
-
-  function showNext() {
-    document.getElementById("story").innerText =
-      gender + "\n\n扉が3つある。\n\nどれも普通じゃない。";
-
-    document.getElementById("choices").innerHTML =
-      '<button onclick="showHotel()">左の扉に入る（ホテル）</button>' +
-      '<button onclick="showStart()">最初から</button>';
-  }
-
-  function showHotel() {
-    document.getElementById("story").innerText =
-      gender + "\n\n……ホテル……？\n\n誰もいない。";
-
-    document.getElementById("choices").innerHTML =
-      '<button onclick="showStart()">最初から</button>';
-  }
-
-  showStart();
+function cat(){
+ document.getElementById("text").innerText = "女主人公";
+}
 </script>
 
 </body>
