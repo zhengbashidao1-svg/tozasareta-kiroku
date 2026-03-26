@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 v32</title>
+  <title>閉ざされた記録 v33</title>
   <style>
     body{
       margin:0;
@@ -101,11 +101,13 @@
   <script>
     let gender = "";
     let animal = "";
+    let route = "";
 
     function updateStatus() {
       document.getElementById("status").innerText =
         "主人公：" + (gender || "未決定") + "\n" +
-        "動物：" + (animal || "未決定");
+        "動物：" + (animal || "未決定") + "\n" +
+        "現在ルート：" + (route || "未選択");
     }
 
     function render(stage, bg, speaker, text, choices) {
@@ -129,8 +131,9 @@
     function showStart() {
       gender = "";
       animal = "";
+      route = "";
       render(
-        "ホテル編 / 第1部屋",
+        "共通編 / 第1部屋",
         "背景イメージ：暗闇の部屋",
         "SYSTEM",
 `暗闇の部屋。
@@ -160,14 +163,14 @@
     function showDoorRoom() {
       const line = gender === "女主人公"
         ? "扉が3つ……？ なんか全部、嫌な感じがする……。"
-        : "……扉が3つ……。どれも普通じゃない。";
+        : "……扉が3つある。どれも普通じゃない。";
 
       const animalLine = animal === "猫"
-        ? "猫は3つの扉の前を静かに歩き、一瞬だけ左を見た。"
+        ? "猫は3つの扉の前を静かに歩き、一瞬だけ真ん中の扉を見た。"
         : "犬は左の扉の前で止まり、低く唸っている。";
 
       render(
-        "ホテル編 / 第2部屋",
+        "共通編 / 第2部屋",
         "背景イメージ：3つの扉のある広間",
         "SYSTEM",
 `${gender}
@@ -175,6 +178,8 @@
 ${line}
 
 左の扉からは冷たい空気が流れ込んでくる。
+真ん中の扉からは、消毒液のような匂いが漂ってくる。
+右の扉は重く閉ざされ、機械のような音が漏れている。
 
 ${animalLine}
 
@@ -185,14 +190,25 @@ ${animalLine}
             onClick: showHotelLobby
           },
           {
+            text: "真ん中の扉に入る（廃病院）",
+            onClick: showHospitalEntrance
+          },
+          {
             text: animal + "に任せる",
-            onClick: showHotelLobby
+            onClick: () => {
+              if (animal === "猫") {
+                showHospitalEntrance();
+              } else {
+                showHotelLobby();
+              }
+            }
           }
         ]
       );
     }
 
     function showHotelLobby() {
+      route = "ホテル";
       const line = gender === "女主人公"
         ? "ここ……ホテル……？ 静かすぎる……。"
         : "……ホテル……？ 誰もいない。";
@@ -209,6 +225,126 @@ ${line}
 時計は止まり、シャンデリアだけが揺れている。
 
 床には新しい足跡がある。`,
+        [
+          {
+            text: "最初から",
+            onClick: showStart
+          }
+        ]
+      );
+    }
+
+    function showHospitalEntrance() {
+      route = "廃病院";
+      const line = gender === "女主人公"
+        ? "ここ……病院……？ 空気が重い……。"
+        : "……廃病院か。嫌な感じがする。";
+
+      const animalLine = animal === "猫"
+        ? "猫は薄暗い廊下の奥をじっと見ている。"
+        : "犬は落ち着かず、床の匂いを嗅いでいる。";
+
+      render(
+        "廃病院編 / 第3部屋",
+        "背景イメージ：廃病院の入口",
+        "SYSTEM",
+`${gender}
+
+${line}
+
+壁は汚れ、照明は点滅している。
+遠くで金属が擦れるような音がした。
+
+${animalLine}
+
+この先に進めば、もう戻れない気がする。`,
+        [
+          {
+            text: "廊下へ進む",
+            onClick: showHospitalCorridor
+          },
+          {
+            text: "最初から",
+            onClick: showStart
+          }
+        ]
+      );
+    }
+
+    function showHospitalCorridor() {
+      const line = gender === "女主人公"
+        ? "誰か……いる……？"
+        : "……気配がする。誰かいるな。";
+
+      render(
+        "廃病院編 / 第4部屋",
+        "背景イメージ：長い病院の廊下",
+        "SYSTEM",
+`${gender}
+
+${line}
+
+長い廊下の先に、人影のようなものが見えた。
+
+顔は見えない。
+だが、こちらを見ている気がする。
+
+空気が一気に冷たくなる。`,
+        [
+          {
+            text: "隠れる",
+            onClick: showHospitalHide
+          },
+          {
+            text: "逃げる",
+            onClick: showHospitalRun
+          },
+          {
+            text: "最初から",
+            onClick: showStart
+          }
+        ]
+      );
+    }
+
+    function showHospitalHide() {
+      render(
+        "廃病院編 / 第5部屋",
+        "背景イメージ：診察室の影",
+        "SYSTEM",
+`${gender}
+
+あなたは物陰に身を隠した。
+
+足音が近づいてくる。
+
+やがて、覆面をつけた誰かがゆっくり通り過ぎていった。
+
+……人間だ。
+だが、普通じゃない。`,
+        [
+          {
+            text: "最初から",
+            onClick: showStart
+          }
+        ]
+      );
+    }
+
+    function showHospitalRun() {
+      render(
+        "廃病院編 / 第5部屋",
+        "背景イメージ：非常階段前",
+        "SYSTEM",
+`${gender}
+
+あなたは反射的に走り出した。
+
+背後で足音が速くなる。
+
+追ってきている。
+
+この病院には、危険な何かがいる。`,
         [
           {
             text: "最初から",
