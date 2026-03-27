@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 v33</title>
+  <title>閉ざされた記録 v34</title>
   <style>
     body{
       margin:0;
@@ -52,7 +52,7 @@
       white-space:pre-wrap;
       line-height:1.9;
       font-size:22px;
-      min-height:220px;
+      min-height:240px;
     }
     .status{
       white-space:pre-wrap;
@@ -81,16 +81,11 @@
 </head>
 <body>
   <div class="wrap">
-    <div id="stage" class="stage">ホテル編 / 第1部屋</div>
-
+    <div id="stage" class="stage">共通編 / 第1部屋</div>
     <div id="bg" class="panel bg">背景イメージ：暗闇の部屋</div>
-
     <div id="speaker" class="speaker">SYSTEM</div>
-
     <div id="story" class="panel story"></div>
-
     <div id="status" class="panel status"></div>
-
     <div id="choices" class="choices"></div>
 
     <div class="choices" style="margin-top:12px;">
@@ -102,12 +97,21 @@
     let gender = "";
     let animal = "";
     let route = "";
+    let trust = 0;
+    let suspicion = 0;
+    let truth = 0;
+    let danger = 0;
+    let petAlive = true;
+    let petBetrayed = false;
 
     function updateStatus() {
       document.getElementById("status").innerText =
         "主人公：" + (gender || "未決定") + "\n" +
         "動物：" + (animal || "未決定") + "\n" +
-        "現在ルート：" + (route || "未選択");
+        "現在ルート：" + (route || "未選択") + "\n" +
+        "信頼：" + trust + " / 疑い：" + suspicion + "\n" +
+        "真相フラグ：" + truth + " / 危険フラグ：" + danger + "\n" +
+        "動物：" + (petAlive ? "生存" : "死亡") + " / 裏切り：" + (petBetrayed ? "あり" : "なし");
     }
 
     function render(stage, bg, speaker, text, choices) {
@@ -128,10 +132,20 @@
       });
     }
 
-    function showStart() {
+    function resetGameState() {
       gender = "";
       animal = "";
       route = "";
+      trust = 0;
+      suspicion = 0;
+      truth = 0;
+      danger = 0;
+      petAlive = true;
+      petBetrayed = false;
+    }
+
+    function showStart() {
+      resetGameState();
       render(
         "共通編 / 第1部屋",
         "背景イメージ：暗闇の部屋",
@@ -145,6 +159,7 @@
             onClick: () => {
               gender = "男主人公";
               animal = "犬";
+              trust += 1;
               showDoorRoom();
             }
           },
@@ -153,6 +168,7 @@
             onClick: () => {
               gender = "女主人公";
               animal = "猫";
+              trust += 1;
               showDoorRoom();
             }
           }
@@ -196,6 +212,7 @@ ${animalLine}
           {
             text: animal + "に任せる",
             onClick: () => {
+              trust += 1;
               if (animal === "猫") {
                 showHospitalEntrance();
               } else {
@@ -273,7 +290,7 @@ ${animalLine}
 
     function showHospitalCorridor() {
       const line = gender === "女主人公"
-        ? "誰か……いる……？"
+        ? "……誰かいる……？"
         : "……気配がする。誰かいるな。";
 
       render(
@@ -286,18 +303,18 @@ ${line}
 
 長い廊下の先に、人影のようなものが見えた。
 
-顔は見えない。
-だが、こちらを見ている気がする。
+動いていない。
+……だが、見られている気がする。
 
 空気が一気に冷たくなる。`,
         [
           {
             text: "隠れる",
-            onClick: showHospitalHide
+            onClick: showHospitalHideResult
           },
           {
             text: "逃げる",
-            onClick: showHospitalRun
+            onClick: showHospitalRunResult
           },
           {
             text: "最初から",
@@ -307,22 +324,187 @@ ${line}
       );
     }
 
-    function showHospitalHide() {
-      render(
-        "廃病院編 / 第5部屋",
-        "背景イメージ：診察室の影",
-        "SYSTEM",
+    function showHospitalHideResult() {
+      if (trust >= 2 && !petBetrayed) {
+        truth += 1;
+        render(
+          "廃病院編 / 第5部屋",
+          "背景イメージ：診察室の影",
+          "SYSTEM",
+`${gender}
+
+あなたは静かに物陰に身を隠した。
+
+足音が近づく。
+……止まった。
+
+${animal === "猫"
+  ? "猫が静かにこちらを見て、音もなく別の方向へ歩いた。人影はそちらへ視線を向ける。"
+  : "犬が低く唸り、あなたの袖を軽く引いた。今は動くな、と伝えているようだった。"
+}
+
+やがて人影は反対方向へ歩いていく。
+
+……助かった。`,
+          [
+            {
+              text: "さらに奥へ進む",
+              onClick: showHospitalReveal
+            },
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      } else {
+        danger += 1;
+        petBetrayed = true;
+        render(
+          "廃病院編 / 第5部屋",
+          "背景イメージ：診察室の影",
+          "SYSTEM",
 `${gender}
 
 あなたは物陰に身を隠した。
 
-足音が近づいてくる。
+……だが、
+${animal === "猫"
+  ? "猫が突然走り出した。"
+  : "犬が堪えきれずに短く吠えた。"
+}
 
-やがて、覆面をつけた誰かがゆっくり通り過ぎていった。
+足音が止まる。
 
-……人間だ。
-だが、普通じゃない。`,
+次の瞬間、
+覆面の男が目の前に立っていた。`,
+          [
+            {
+              text: "正体を見る",
+              onClick: showHospitalFaceReveal
+            },
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      }
+    }
+
+    function showHospitalRunResult() {
+      danger += 1;
+
+      if (animal === "猫" && trust >= 1) {
+        petAlive = false;
+        render(
+          "廃病院編 / 第5部屋",
+          "背景イメージ：非常階段前",
+          "SYSTEM",
+`${gender}
+
+あなたは全力で走り出した。
+
+背後から足音。
+近い。
+
+その瞬間、猫が別方向へ走り出した。
+男の気配がそちらへ向かう。
+
+……助かった。
+
+だが、もう猫の姿は見えない。`,
+          [
+            {
+              text: "先へ進む",
+              onClick: showHospitalReveal
+            },
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      } else if (animal === "dog" && trust <= 1) {
+        petBetrayed = true;
+        render(
+          "廃病院編 / 第5部屋",
+          "背景イメージ：非常階段前",
+          "SYSTEM",
+`${gender}
+
+あなたは反射的に走り出した。
+
+だが、犬が大きく吠えた。
+
+「まずい——」
+
+足音が一気にこちらへ向かってくる。
+逃げ切れない。`,
+          [
+            {
+              text: "振り返る",
+              onClick: showHospitalFaceReveal
+            },
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      } else {
+        render(
+          "廃病院編 / 第5部屋",
+          "背景イメージ：非常階段前",
+          "SYSTEM",
+`${gender}
+
+あなたは全力で走り出した。
+
+背後から足音。
+近い。
+だが、なんとか距離を取る。
+
+息を切らしながら、あなたは暗い通路へ転がり込んだ。`,
+          [
+            {
+              text: "先へ進む",
+              onClick: showHospitalReveal
+            },
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      }
+    }
+
+    function showHospitalFaceReveal() {
+      truth += 2;
+      danger += 1;
+      render(
+        "廃病院編 / 第6部屋",
+        "背景イメージ：覆面の男の目前",
+        "SYSTEM",
+`${gender}
+
+覆面の奥は空洞だった。
+
+だが次の瞬間——
+そこに浮かんだのは、
+
+あなた自身の顔だった。
+
+頭の奥が痛む。
+記憶の断片が流れ込んでくる。
+
+……この場所に、以前も来たことがある。`,
         [
+          {
+            text: "さらに奥へ進む",
+            onClick: showHospitalEndingBranch
+          },
           {
             text: "最初から",
             onClick: showStart
@@ -331,27 +513,106 @@ ${line}
       );
     }
 
-    function showHospitalRun() {
+    function showHospitalReveal() {
+      truth += 1;
       render(
-        "廃病院編 / 第5部屋",
-        "背景イメージ：非常階段前",
+        "廃病院編 / 第6部屋",
+        "背景イメージ：手術記録の残る部屋",
         "SYSTEM",
 `${gender}
 
-あなたは反射的に走り出した。
+薄暗い部屋に、古い記録が散らばっている。
 
-背後で足音が速くなる。
+患者名簿、手術記録、写真。
+その中に、あなたに似た顔が写っていた。
 
-追ってきている。
+背筋が冷える。
 
-この病院には、危険な何かがいる。`,
+ここには、まだ知らない真実がある。`,
         [
+          {
+            text: "記録を読む",
+            onClick: showHospitalEndingBranch
+          },
           {
             text: "最初から",
             onClick: showStart
           }
         ]
       );
+    }
+
+    function showHospitalEndingBranch() {
+      if (truth >= 2 && petAlive && !petBetrayed) {
+        render(
+          "廃病院編 / エンディング",
+          "背景イメージ：病院の外へ続く出口",
+          "END",
+`${gender}
+
+あなたは廃病院から脱出した。
+
+追ってきていた存在の正体はまだ曖昧だ。
+だが、この場所で何かが起きていたことだけは確かだった。
+
+${animal}も生きている。
+
+完全な真相ではない。
+それでも、あなたは外へ出ることができた。`,
+          [
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      } else if (!petAlive || petBetrayed) {
+        render(
+          "廃病院編 / エンディング",
+          "背景イメージ：病院の外、曇った空",
+          "END",
+`${gender}
+
+あなたはなんとか廃病院を抜け出した。
+
+だが、${animal}は戻らない。
+あの時の行動が正しかったのか、もう分からない。
+
+背後の気配は消えていない。
+
+助かったはずなのに、
+何かを置いてきてしまった。`,
+          [
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      } else {
+        render(
+          "廃病院編 / エンディング",
+          "背景イメージ：暗闇の廊下",
+          "END",
+`${gender}
+
+足音が止まる。
+
+静かになった、と思った瞬間——
+背後から肩を掴まれた。
+
+あなたはここで終わる。
+
+廃病院の闇は、
+何も返してくれなかった。`,
+          [
+            {
+              text: "最初から",
+              onClick: showStart
+            }
+          ]
+        );
+      }
     }
 
     showStart();
