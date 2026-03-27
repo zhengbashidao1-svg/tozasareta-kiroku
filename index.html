@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>閉ざされた記録 v34</title>
+  <title>閉ざされた記録 v35</title>
   <style>
     body{
       margin:0;
@@ -89,7 +89,7 @@
     <div id="choices" class="choices"></div>
 
     <div class="choices" style="margin-top:12px;">
-      <button class="sub" onclick="showStart()">最初から</button>
+      <button class="sub" onclick="playClickSound(); showStart();">最初から</button>
     </div>
   </div>
 
@@ -103,6 +103,54 @@
     let danger = 0;
     let petAlive = true;
     let petBetrayed = false;
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        audioCtx = new AudioContextClass();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq = 440, duration = 0.12, type = "sine", volume = 0.03) {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.value = volume;
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+      osc.stop(ctx.currentTime + duration);
+    }
+
+    function playClickSound() {
+      playTone(700, 0.06, "square", 0.02);
+    }
+
+    function playSuccessSound() {
+      playTone(520, 0.08, "sine", 0.03);
+      setTimeout(() => playTone(780, 0.10, "sine", 0.025), 70);
+    }
+
+    function playDangerSound() {
+      playTone(180, 0.22, "sawtooth", 0.035);
+    }
+
+    function playScarySound() {
+      playTone(120, 0.35, "triangle", 0.04);
+      setTimeout(() => playTone(95, 0.45, "sawtooth", 0.03), 60);
+    }
 
     function updateStatus() {
       document.getElementById("status").innerText =
@@ -127,7 +175,10 @@
       choices.forEach(choice => {
         const btn = document.createElement("button");
         btn.innerText = choice.text;
-        btn.onclick = choice.onClick;
+        btn.onclick = () => {
+          playClickSound();
+          choice.onClick();
+        };
         box.appendChild(btn);
       });
     }
@@ -253,6 +304,8 @@ ${line}
 
     function showHospitalEntrance() {
       route = "廃病院";
+      playDangerSound();
+
       const line = gender === "女主人公"
         ? "ここ……病院……？ 空気が重い……。"
         : "……廃病院か。嫌な感じがする。";
@@ -327,6 +380,8 @@ ${line}
     function showHospitalHideResult() {
       if (trust >= 2 && !petBetrayed) {
         truth += 1;
+        playSuccessSound();
+
         render(
           "廃病院編 / 第5部屋",
           "背景イメージ：診察室の影",
@@ -360,6 +415,8 @@ ${animal === "猫"
       } else {
         danger += 1;
         petBetrayed = true;
+        playDangerSound();
+
         render(
           "廃病院編 / 第5部屋",
           "背景イメージ：診察室の影",
@@ -397,6 +454,8 @@ ${animal === "猫"
 
       if (animal === "猫" && trust >= 1) {
         petAlive = false;
+        playDangerSound();
+
         render(
           "廃病院編 / 第5部屋",
           "背景イメージ：非常階段前",
@@ -425,8 +484,10 @@ ${animal === "猫"
             }
           ]
         );
-      } else if (animal === "dog" && trust <= 1) {
+      } else if (animal === "犬" && trust <= 1) {
         petBetrayed = true;
+        playDangerSound();
+
         render(
           "廃病院編 / 第5部屋",
           "背景イメージ：非常階段前",
@@ -453,6 +514,8 @@ ${animal === "猫"
           ]
         );
       } else {
+        playSuccessSound();
+
         render(
           "廃病院編 / 第5部屋",
           "背景イメージ：非常階段前",
@@ -483,6 +546,8 @@ ${animal === "猫"
     function showHospitalFaceReveal() {
       truth += 2;
       danger += 1;
+      playScarySound();
+
       render(
         "廃病院編 / 第6部屋",
         "背景イメージ：覆面の男の目前",
@@ -515,6 +580,8 @@ ${animal === "猫"
 
     function showHospitalReveal() {
       truth += 1;
+      playSuccessSound();
+
       render(
         "廃病院編 / 第6部屋",
         "背景イメージ：手術記録の残る部屋",
@@ -544,6 +611,8 @@ ${animal === "猫"
 
     function showHospitalEndingBranch() {
       if (truth >= 2 && petAlive && !petBetrayed) {
+        playSuccessSound();
+
         render(
           "廃病院編 / エンディング",
           "背景イメージ：病院の外へ続く出口",
@@ -567,6 +636,8 @@ ${animal}も生きている。
           ]
         );
       } else if (!petAlive || petBetrayed) {
+        playDangerSound();
+
         render(
           "廃病院編 / エンディング",
           "背景イメージ：病院の外、曇った空",
@@ -590,6 +661,8 @@ ${animal}も生きている。
           ]
         );
       } else {
+        playScarySound();
+
         render(
           "廃病院編 / エンディング",
           "背景イメージ：暗闇の廊下",
